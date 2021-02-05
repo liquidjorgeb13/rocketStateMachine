@@ -21,6 +21,8 @@ using namespace msm::front;
 // for And_ operator
 using namespace msm::front::euml;
 
+// Some data to learn how to pass data 
+// to/from between "the outside" and the FSM
 struct Mission
 {
   Mission(std::string name, std::vector<double> coord, std::string s)
@@ -34,16 +36,20 @@ struct Mission
 };
 
 // ******************************* EVENTS **************************************
-struct ignitionStarted //go to TowerDetached state
+
+// Rocket gets mission data on ignition
+struct ignitionStarted 
 {
   ignitionStarted(Mission m)
     : mission(m)
-  { }
+  {
+    /*go to TowerDetached state*/
+  }
   
   Mission mission;
 }; 
 
-struct liftoff{};  //go to MidAir state
+struct liftoff{ /*go to MidAir state*/ };  
 
 // *****************************************************************************
 // ******************************* STATES **************************************
@@ -54,6 +60,7 @@ struct Empty_tag {};
 typedef msm::front::euml::func_state<Empty_tag> EmptySt;
 
 // -------- TowerDetached State --------------------
+// As soon as there is ignition, detach from tower
 struct TowerDetached_Entry
 {
   template <class Event, class FSM, class STATE>
@@ -76,8 +83,9 @@ struct TowerDetached_tag {};
 
 typedef msm::front::euml::func_state<TowerDetached_tag, TowerDetached_Entry, TowerDetached_Exit> TowerDetachedSt;
 
-// -------- MidAir State --------------------
 
+// -------- MidAir State --------------------
+// Rocket not touching the ground anymore
 struct MidAir_Entry
 {
   template <class Event, class FSM, class STATE>
@@ -176,7 +184,6 @@ struct goodAccelerometer
 // *****************************************************************************
 // ******************************* FSM DEFINITION ******************************
 
-// ----------- Transition Table -----------------
 struct rocket_transition_table : mpl::vector<
   //    Start            Event               Next               Action                     Guard
   //  +----------------+-------------------+------------------+---------------------------+----------------------+
@@ -193,29 +200,13 @@ struct rocket_transition_table : mpl::vector<
 
 > {};
 
-struct rocket_tag
-{
-  rocket_tag()
-    : mission("none", {0.0, 0.0, 0.0}, "none"),
-      goodFuelPump(true),
-      travelDistanceLimit(9.0),
-      goodIMU(true)
-  {
-    
-  }
-
-  bool goodIMU;
-  bool goodFuelPump;
-  Mission mission;
-  double travelDistanceLimit;
-};
-
-
+struct rocket_tag {};
 typedef msm::front::euml::func_state_machine<rocket_tag,
                                              rocket_transition_table,
                                              EmptySt> rocket_;
 
 typedef msm::back::state_machine<rocket_> rocket;
+
 
 
 int main()
